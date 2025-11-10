@@ -42,3 +42,6 @@ export type TypographySize = keyof typeof import('../styles/theme').typography.s
 
 // Character expression types
 export * from './character';
+
+// v2 API types
+export * from './api-v2';

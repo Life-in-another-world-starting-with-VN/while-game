@@ -63,7 +63,7 @@ export async function apiRequest<T>(
     if (contentType && contentType.includes('application/json')) {
       try {
         data = await response.json();
-      } catch (e) {
+      } catch {
         // Response body is not JSON
       }
     }

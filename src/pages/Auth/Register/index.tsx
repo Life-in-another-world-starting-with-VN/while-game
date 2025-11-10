@@ -1,15 +1,14 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { buildApiUrl } from "../../../config/env";
+import { signup } from "../../../services/authService";
+import type { SignupRequest } from "../../../types/api-v2";
 
 type FormData = {
   username: string;
   email: string;
   password: string;
 };
-
-const REGISTER_ENDPOINT = buildApiUrl("/api/v1/auth/register");
 
 const PageContainer = styled.div`
   width: 100%;
@@ -158,43 +157,24 @@ function RegisterPage() {
     setFeedback(null);
     setIsSubmitting(true);
     try {
-      const response = await fetch(REGISTER_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const signupRequest: SignupRequest = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      };
 
-      let payload: unknown = null;
-      try {
-        payload = await response.json();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (parseError) {
-        // Non-JSON responses are treated as plain failures.
-      }
-
-      if (!response.ok) {
-        const serverMessage =
-          payload && typeof payload === "object" && "message" in payload
-            ? String((payload as { message: unknown }).message)
-            : payload && typeof payload === "object" && "detail" in payload
-              ? String((payload as { detail: unknown }).detail)
-              : "회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.";
-        setFeedback({ type: "error", text: serverMessage });
-        return;
-      }
+      const response = await signup(signupRequest);
 
       setFeedback({
         type: "success",
-        text: "회원가입이 완료되었습니다! 이제 로그인해 주세요.",
+        text: response.message || "회원가입이 완료되었습니다! 이제 로그인해 주세요.",
       });
       setFormData({ username: "", email: "", password: "" });
     } catch (error) {
-      setFeedback({
-        type: "error",
-        text: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
-      });
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+      setFeedback({ type: "error", text: errorMessage });
     } finally {
       setIsSubmitting(false);
     }

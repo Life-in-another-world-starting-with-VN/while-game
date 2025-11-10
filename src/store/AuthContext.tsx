@@ -1,35 +1,16 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
-
-export interface AuthUser {
-  id?: string;
-  [key: string]: unknown;
-}
-
-interface AuthContextValue {
-  accessToken: string | null;
-  refreshToken: string | null;
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  isInitializing: boolean;
-  lastError: string | null;
-  login: (params: { refreshToken: string; accessToken?: string | null; user?: AuthUser | null }) => void;
-  logout: () => void;
-  refreshAccessToken: () => Promise<{ accessToken: string; userId?: string; user?: AuthUser | null }>;
-}
+import { AuthContext } from '../contexts/AuthContext';
+import type { AuthUser, AuthContextValue } from '../contexts/AuthContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-const REFRESH_ENDPOINT = `${API_BASE_URL}/api/v1/auth/refresh`;
+const REFRESH_ENDPOINT = `${API_BASE_URL}/api/v2/reissue`;
 const REFRESH_STORAGE_KEY = 'refresh_token';
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -63,7 +44,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       payload = await response.json();
-    } catch (error) {
+    } catch {
       throw new Error('토큰 응답을 파싱하지 못했습니다.');
     }
 
@@ -113,8 +94,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }));
 
     refreshWithToken(storedRefreshToken)
-      .catch((error: unknown) => {
-        setLastError(error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
+      .catch((err: unknown) => {
+        setLastError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
         localStorage.removeItem(REFRESH_STORAGE_KEY);
         setState(initialState);
       })
@@ -128,9 +109,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       return await refreshWithToken(state.refreshToken);
-    } catch (error) {
-      setLastError(error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.');
-      throw error;
+    } catch (err) {
+      setLastError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+      throw err;
     }
   }, [refreshWithToken, state.refreshToken]);
 
@@ -169,12 +150,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth는 AuthProvider 내부에서만 사용할 수 있습니다.');
-  }
-  return context;
 }

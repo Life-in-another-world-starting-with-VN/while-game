@@ -1,22 +1,14 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { buildApiUrl } from "../../../config/env";
-import { useAuth, type AuthUser } from "../../../store/AuthContext";
+import { useAuth } from "../../../hooks/useAuth";
+import { login as loginService } from "../../../services/authService";
+import type { LoginRequest } from "../../../types/api-v2";
 
 type FormData = {
   username: string;
   password: string;
 };
-
-type LoginSuccess = {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-  user?: Record<string, unknown>;
-};
-
-const LOGIN_ENDPOINT = buildApiUrl("/api/v1/auth/login");
 
 const PageContainer = styled.div`
   width: 100%;
@@ -164,48 +156,14 @@ function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const body = new URLSearchParams({
-        grant_type: "password",
+      const loginRequest: LoginRequest = {
         username: formData.username,
         password: formData.password,
-        scope: "",
-        client_id: "",
-        client_secret: "",
-      });
+      };
 
-      const response = await fetch(LOGIN_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body,
-      });
+      const response = await loginService(loginRequest);
 
-      const payload: unknown = await response.json().catch(() => null);
-
-      if (!response.ok || !payload) {
-        const errorMessage = (() => {
-          if (payload && typeof payload === "object") {
-            const detail = (payload as { detail?: unknown }).detail;
-            if (Array.isArray(detail) && detail.length > 0) {
-              return detail
-                .map((item) => String((item as { msg?: unknown }).msg ?? "오류가 발생했습니다."))
-                .join("\n");
-            }
-            if (typeof detail === "string") {
-              return detail;
-            }
-          }
-          return "로그인에 실패했습니다. 정보를 확인하고 다시 시도해 주세요.";
-        })();
-
-        setFeedback({ type: "error", text: errorMessage });
-        return;
-      }
-
-      const loginPayload = payload as Partial<LoginSuccess>;
-
-      if (typeof loginPayload.refresh_token !== "string" || loginPayload.refresh_token.length === 0) {
+      if (!response.refresh_token) {
         setFeedback({
           type: "error",
           text: "서버에서 리프레시 토큰을 받지 못했습니다. 다시 시도해 주세요.",
@@ -213,26 +171,20 @@ function LoginPage() {
         return;
       }
 
-      const normalizedUser =
-        loginPayload.user && typeof loginPayload.user === "object" ? (loginPayload.user as AuthUser) : null;
-
       login({
-        refreshToken: loginPayload.refresh_token,
-        accessToken:
-          typeof loginPayload.access_token === "string" && loginPayload.access_token.length > 0
-            ? loginPayload.access_token
-            : null,
-        user: normalizedUser,
+        refreshToken: response.refresh_token,
+        accessToken: response.access_token || null,
+        user: null,
       });
 
       setFeedback({ type: "success", text: "로그인에 성공했습니다!" });
       setFormData({ username: "", password: "" });
       navigate("/", { replace: true });
     } catch (error) {
-      setFeedback({
-        type: "error",
-        text: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.",
-      });
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "로그인에 실패했습니다. 정보를 확인하고 다시 시도해 주세요.";
+      setFeedback({ type: "error", text: errorMessage });
     } finally {
       setIsSubmitting(false);
     }

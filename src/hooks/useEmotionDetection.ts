@@ -23,7 +23,7 @@ const EXPRESSION_LABEL: Record<ExpressionKey, string> = {
 const DEFAULT_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
 const DEFAULT_DETECTION_INTERVAL = 500;
 
-export interface EmotionData {
+export interface EmotionExpression {
   label: string;
   confidence: number;
 }
@@ -40,7 +40,7 @@ export function useEmotionDetection(
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expression, setExpression] = useState<EmotionData | null>(null);
+  const [expression, setExpression] = useState<EmotionExpression | null>(null);
   const isProcessingRef = useRef(false);
   const resumePlaybackCleanupRef = useRef<(() => void) | null>(null);
 

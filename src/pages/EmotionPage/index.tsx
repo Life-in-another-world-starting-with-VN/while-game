@@ -122,7 +122,7 @@ function EmotionPage() {
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
         ]);
-      } catch (modelError) {
+      } catch {
         throw new Error('감정 분석 모델을 불러오는 중 문제가 발생했습니다.');
       }
     }
@@ -133,7 +133,7 @@ function EmotionPage() {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-      } catch (mediaError) {
+      } catch {
         throw new Error('카메라에 접근할 수 없습니다. 권한을 확인해주세요.');
       }
     }

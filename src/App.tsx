@@ -7,7 +7,8 @@ import MainPage from "./pages/MainPage";
 import GamePage from "./pages/GamePage";
 import { GlobalStyles } from './styles';
 import React from 'react';
-import { AuthProvider, useAuth } from './store/AuthContext';
+import { AuthProvider } from './store/AuthContext';
+import { useAuth } from './hooks/useAuth';
 import EmotionPage from "./pages/EmotionPage";
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {

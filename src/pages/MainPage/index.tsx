@@ -26,7 +26,7 @@ import Exit from '../../assets/MainBtnicon/exit.svg';
 import startBg from '../../assets/start-bg.png';
 import { PageContainer } from './styled';
 import ExitModal from './components/ExitModal';
-import { useAuth } from '../../store/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 function MainPage() {
   const navigate = useNavigate();

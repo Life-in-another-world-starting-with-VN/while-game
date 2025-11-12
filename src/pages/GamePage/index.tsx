@@ -347,33 +347,6 @@ const LoadingDialogueBox = styled.div`
   }
 `;
 
-const LoadingDialogueText = styled.div`
-  color: ${theme.colors.white};
-  font-size: ${theme.typography.sizes.option};
-  font-family: ${theme.typography.fontFamily};
-  font-weight: ${theme.typography.weights.regular};
-  line-height: 1.4;
-  text-align: center;
-  -webkit-text-stroke: 2px black;
-  paint-order: stroke fill;
-  text-shadow:
-    3px 3px 0 #000,
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-
-  ${theme.media.tablet} {
-    font-size: ${theme.typography.sizes.subOption};
-    -webkit-text-stroke: 1.5px black;
-  }
-
-  ${theme.media.mobile} {
-    font-size: ${theme.typography.sizes.button};
-    -webkit-text-stroke: 1px black;
-  }
-`;
-
 const LoadingDots = styled.div`
   display: flex;
   gap: ${theme.spacing.sm};

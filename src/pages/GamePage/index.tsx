@@ -541,6 +541,32 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
     }
   }, [isAutoPlay, currentSceneIndex, autoPlaySpeed, getCurrentScene, handleNextScene]);
 
+  // Keyboard event handler for Space and Enter keys
+  useEffect(() => {
+    if (mode !== 'playing') return;
+
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const currentScene = getCurrentScene();
+      if (!currentScene) return;
+
+      // 선택지가 있는 경우에는 키보드 진행 비활성화
+      const showChoices = currentScene.type === 'selection' || currentScene.type === 'selections';
+      if (showChoices) return;
+
+      // 로딩 중이거나 자동 재생 중일 때는 키보드 진행 비활성화
+      if (gameState.isLoading || isAutoPlay) return;
+
+      // 스페이스바 또는 엔터 키 감지
+      if (event.code === 'Space' || event.code === 'Enter') {
+        event.preventDefault(); // 기본 동작 방지 (스크롤 등)
+        handleNextScene();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [mode, getCurrentScene, gameState.isLoading, isAutoPlay, handleNextScene]);
+
   // Render game setup screens
 
   if (mode === 'create') {

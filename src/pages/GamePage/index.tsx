@@ -320,71 +320,6 @@ const PinkBlurOverlay = styled.div`
   z-index: 0;
 `;
 
-const LoadingDialogueBox = styled.div`
-  position: absolute;
-  bottom: 15%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 85%;
-  max-width: 1400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: ${theme.spacing.lg};
-  padding: ${theme.spacing.xl};
-  z-index: 2;
-
-  ${theme.media.tablet} {
-    bottom: 18%;
-    padding: ${theme.spacing.lg};
-    gap: ${theme.spacing.md};
-  }
-
-  ${theme.media.mobile} {
-    bottom: 20%;
-    padding: ${theme.spacing.md};
-  }
-`;
-
-const LoadingDots = styled.div`
-  display: flex;
-  gap: ${theme.spacing.sm};
-  
-  span {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: ${theme.colors.main};
-    animation: bounce 1.4s infinite ease-in-out both;
-    box-shadow: 0 0 8px ${theme.colors.main};
-
-    &:nth-child(1) {
-      animation-delay: -0.32s;
-    }
-
-    &:nth-child(2) {
-      animation-delay: -0.16s;
-    }
-
-    ${theme.media.mobile} {
-      width: 10px;
-      height: 10px;
-    }
-  }
-
-  @keyframes bounce {
-    0%, 80%, 100% {
-      transform: scale(0);
-      opacity: 0.5;
-    }
-    40% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-`;
-
 interface DialogueLogItem {
   characterName: string;
   characterColor?: string;
@@ -528,11 +463,6 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
       ]);
     }
 
-    // dialogue 씬이면 저장 (selections 씬에서 배경으로 사용)
-    if (currentScene.type === 'dialogue') {
-      setPreviousDialogueScene(currentScene);
-    }
-
     // Check if we need to move to next scene in the array
     if (!isLastScene()) {
       // Move to next scene in current array
@@ -590,6 +520,14 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
         break;
     }
   };
+
+  // Update previous dialogue scene when current scene changes
+  useEffect(() => {
+    const currentScene = getCurrentScene();
+    if (currentScene?.type === 'dialogue') {
+      setPreviousDialogueScene(currentScene);
+    }
+  }, [currentSceneIndex, getCurrentScene]);
 
   // Auto-play effect
   useEffect(() => {
@@ -714,10 +652,8 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
     // Determine if we should show choices
     const showChoices = currentScene && (currentScene.type === 'selection' || currentScene.type === 'selections') && currentScene.selections;
 
-    // selection 씬일 때는 직전 dialogue 씬을 배경으로 사용
-    const displayScene = (currentScene && showChoices && !currentScene.dialogue && previousDialogueScene)
-      ? previousDialogueScene
-      : currentScene;
+    // selection 씬이면 직전 dialogue 씬 사용, 아니면 현재 씬 사용
+    const displayScene = (showChoices && previousDialogueScene) ? previousDialogueScene : currentScene;
 
     // Detect emotion from dialogue text or use default
     const currentExpression: CharacterExpression = displayScene?.dialogue
@@ -759,23 +695,13 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
           />
         )}
 
-        {/* 로딩 중일 때 애니메이션 표시 */}
-        {gameState.isLoading && (
-          <LoadingDialogueBox>
-            <LoadingDots>
-              <span />
-              <span />
-              <span />
-            </LoadingDots>
-          </LoadingDialogueBox>
-        )}
-
-        {/* 로딩 중이 아닐 때만 대화 상자 표시 */}
-        {!gameState.isLoading && displayScene?.dialogue && (
+        {/* 대화 상자 표시 (로딩 중이면 isLoading prop 전달) */}
+        {displayScene?.dialogue && (
           <DialogueBox
             characterName={displayScene.role === "narrator" ? "내레이션" : (displayScene.role || "캐릭터")}
             text={displayScene.dialogue}
             onClick={handleNextScene}
+            isLoading={gameState.isLoading}
           />
         )}
 

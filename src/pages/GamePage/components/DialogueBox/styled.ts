@@ -42,6 +42,9 @@ export const CharacterName = styled.div<{ color?: string }>`
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000;
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
 
   ${theme.media.tablet} {
     font-size: ${theme.typography.sizes.subOption};
@@ -51,6 +54,45 @@ export const CharacterName = styled.div<{ color?: string }>`
   ${theme.media.mobile} {
     font-size: ${theme.typography.sizes.button};
     -webkit-text-stroke: 1px black;
+  }
+`;
+
+export const LoadingDots = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  
+  span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: ${theme.colors.main};
+    animation: bounce 1.4s infinite ease-in-out both;
+    box-shadow: 0 0 4px ${theme.colors.main};
+
+    &:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    &:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    ${theme.media.mobile} {
+      width: 5px;
+      height: 5px;
+    }
+  }
+
+  @keyframes bounce {
+    0%, 80%, 100% {
+      transform: scale(0);
+      opacity: 0.5;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 `;
 

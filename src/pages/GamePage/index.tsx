@@ -11,6 +11,8 @@ import ChoiceButtons from './components/ChoiceButtons';
 import AutoPlayModal from './components/AutoPlayModal';
 import CharacterSprite from './components/CharacterSprite';
 import DialogueLogModal from './components/DialogueLogModal';
+import GameTimer from './components/GameTimer';
+import TimeUpModal from './components/TimeUpModal';
 import { mockMenuItems } from './data/mockGameData';
 import type { MenuAction } from '../../types/game';
 import EmotionStatusWidget from '../../components/EmotionStatusWidget';
@@ -367,6 +369,8 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const [isDialogueLogModalOpen, setIsDialogueLogModalOpen] = useState(false);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [autoPlaySpeed, setAutoPlaySpeed] = useState(3000);
+  const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState(false);
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
 
   // Check if game is already loaded from URL params (future enhancement)
   useEffect(() => {
@@ -413,7 +417,29 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const handleStartCreatedGame = () => {
     setShowStartConfirm(false);
     setCurrentSceneIndex(0);
+    setGameStartTime(Date.now());
     setMode('playing');
+  };
+
+  // Handle time up
+  const handleTimeUp = () => {
+    setIsTimeUpModalOpen(true);
+    setIsAutoPlay(false);
+  };
+
+  // Restart game
+  const handleRestartGame = () => {
+    setIsTimeUpModalOpen(false);
+    setMode('create');
+    setCurrentSceneIndex(0);
+    setDialogueLog([]);
+    setGameStartTime(null);
+    setError(null);
+  };
+
+  // Exit game
+  const handleExitGame = () => {
+    window.history.back();
   };
 
   // Cancel starting game
@@ -709,6 +735,11 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
       <Container $backgroundImage={finalBackgroundUrl}>
         <PinkBlurOverlay />
         <EmotionStatusWidget />
+        
+        {/* 게임 타이머 - 5분 제한 */}
+        {gameStartTime && (
+          <GameTimer durationMinutes={5} onTimeUp={handleTimeUp} />
+        )}
 
         {!showChoices && !gameState.isLoading && <ClickableOverlay onClick={handleNextScene} />}
 
@@ -759,6 +790,12 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
           isOpen={isDialogueLogModalOpen}
           onClose={() => setIsDialogueLogModalOpen(false)}
           dialogueLog={dialogueLog}
+        />
+
+        <TimeUpModal
+          isOpen={isTimeUpModalOpen}
+          onRestart={handleRestartGame}
+          onExit={handleExitGame}
         />
 
         {(error || gameState.error) && (

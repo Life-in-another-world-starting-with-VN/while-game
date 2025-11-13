@@ -17,12 +17,7 @@ const TimerContainer = styled.div`
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-`;
-
-const TimerIcon = styled.div`
-  font-size: 1.2rem;
 `;
 
 const TimerText = styled.div<{ $isWarning: boolean }>`

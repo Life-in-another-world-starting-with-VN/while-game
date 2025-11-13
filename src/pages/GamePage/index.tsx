@@ -707,24 +707,47 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
     // selection 씬이면 직전 dialogue 씬 사용, 아니면 현재 씬 사용
     const displayScene = (showChoices && previousDialogueScene) ? previousDialogueScene : currentScene;
 
-    // Detect emotion from dialogue text or use default
-    const currentExpression: CharacterExpression = displayScene?.dialogue
-      ? detectEmotion(displayScene.dialogue, gameForm.personality)
-      : ('neutral' as CharacterExpression);
-
-    // Get character ID from role name for consistent character assignment
-    const characterId = displayScene?.role
-      ? getCharacterIdFromName(displayScene.role)
-      : '1';
-
-    // Use character_filename if provided and valid, otherwise use characterId
-    const isValidCharacterId = (id: string): id is CharacterId => {
-      return id === '1' || id === '2' || id === '3';
+    // Parse character_filename if provided (format: "3_anger.png")
+    const parseCharacterFilename = (filename: string | null | undefined): { characterId: CharacterId; expression: CharacterExpression } | null => {
+      if (!filename) return null;
+      
+      // Extract character ID and expression from filename (e.g., "3_anger.png" -> id: "3", expression: "anger")
+      const match = filename.match(/^([123])_([a-z]+)\.png$/);
+      if (!match) return null;
+      
+      const [, id, expr] = match;
+      const characterId = id as CharacterId;
+      
+      // Map expression name to CharacterExpression type
+      const expressionMap: Record<string, CharacterExpression> = {
+        'anger': 'anger',
+        'laugh': 'laugh',
+        'smile': 'smile',
+        'sad': 'sad',
+        'worry': 'worry',
+        'embarrassed': 'embarrassed',
+        'blush': 'blush',
+        'thinking': 'thinking',
+        'surprise': 'surprise',
+      };
+      
+      const expression = expressionMap[expr];
+      if (!expression) return null;
+      
+      return { characterId, expression };
     };
-    const characterImageId: CharacterId =
-      displayScene?.character_filename && isValidCharacterId(displayScene.character_filename)
-        ? displayScene.character_filename
-        : characterId;
+
+    const parsedCharacter = parseCharacterFilename(displayScene?.character_filename);
+    
+    // Use parsed values from character_filename if available, otherwise detect from dialogue
+    const currentExpression: CharacterExpression = parsedCharacter?.expression
+      || (displayScene?.dialogue ? detectEmotion(displayScene.dialogue, gameForm.personality) : 'smile');
+
+    // Get character ID from character_filename or role name
+    const characterId = parsedCharacter?.characterId
+      || (displayScene?.role ? getCharacterIdFromName(displayScene.role) : '1');
+
+    const characterImageId: CharacterId = characterId;
 
     // 배경 URL 처리: API에서 받은 URL이 있으면 baseURL과 결합
     const finalBackgroundUrl = gameState.backgroundUrl

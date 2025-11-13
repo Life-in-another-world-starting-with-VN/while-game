@@ -116,6 +116,37 @@ const Input = styled.input`
   }
 `;
 
+const CheckboxField = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #edf2f7;
+  }
+`;
+
+const Checkbox = styled.input`
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+`;
+
+const CheckboxLabel = styled.label`
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2d3748;
+  cursor: pointer;
+  user-select: none;
+  flex: 1;
+`;
+
 
 
 const Button = styled.button`
@@ -330,6 +361,19 @@ interface DialogueLogItem {
 
 type GameSetupMode = 'create' | 'playing';
 
+// Hidden timer component - only tracks time without displaying
+const HiddenTimer: React.FC<{ durationMinutes: number; onTimeUp: () => void }> = ({ durationMinutes, onTimeUp }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onTimeUp();
+    }, durationMinutes * 60 * 1000);
+
+    return () => clearTimeout(timer);
+  }, [durationMinutes, onTimeUp]);
+
+  return null;
+};
+
 const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const [searchParams] = useSearchParams();
   const gameIdParam = searchParams.get('gameId');
@@ -358,6 +402,7 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   });
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
+  const [showTimer, setShowTimer] = useState(true); // 타이머 표시 여부
 
   // Scene navigation state
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
@@ -636,6 +681,20 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
               />
               <InputHint>최소 5분 ~ 최대 100분 (권장: 30~60분)</InputHint>
             </FormField>
+            <FormField>
+              <CheckboxField onClick={() => !isCreatingGame && setShowTimer(!showTimer)}>
+                <Checkbox
+                  type="checkbox"
+                  id="showTimer"
+                  checked={showTimer}
+                  onChange={e => setShowTimer(e.target.checked)}
+                  disabled={isCreatingGame}
+                />
+                <CheckboxLabel htmlFor="showTimer">
+                  7분 시연 타이머 표시 (시간 종료 시 자동 종료)
+                </CheckboxLabel>
+              </CheckboxField>
+            </FormField>
             <Button onClick={handleCreateGame} disabled={isCreatingGame}>
               {isCreatingGame ? '생성 중...' : '게임 생성하기'}
             </Button>
@@ -759,9 +818,14 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
         <PinkBlurOverlay />
         <EmotionStatusWidget />
         
-        {/* 게임 타이머 - 7분 제한 */}
-        {gameStartTime && (
+        {/* 게임 타이머 - 7분 제한 (showTimer가 true일 때만 표시) */}
+        {gameStartTime && showTimer && (
           <GameTimer durationMinutes={7} onTimeUp={handleTimeUp} />
+        )}
+        
+        {/* 타이머 숨김 모드 - 백그라운드에서만 시간 체크 */}
+        {gameStartTime && !showTimer && (
+          <HiddenTimer durationMinutes={7} onTimeUp={handleTimeUp} />
         )}
 
         {!showChoices && !gameState.isLoading && <ClickableOverlay onClick={handleNextScene} />}

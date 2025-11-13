@@ -116,7 +116,7 @@ const TimeUpModal: React.FC<TimeUpModalProps> = ({ isOpen, onRestart, onExit }) 
         <Icon>⏰</Icon>
         <Title>시연 시간 종료</Title>
         <Message>
-          5분 시연 시간이 종료되었습니다.
+          7분 시연 시간이 종료되었습니다.
           <br />
           새로운 게임을 시작하시겠습니까?
         </Message>

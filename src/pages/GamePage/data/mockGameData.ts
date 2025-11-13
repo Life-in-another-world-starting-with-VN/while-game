@@ -186,7 +186,6 @@ export const mockMenuItems: MenuItem[] = [
   { id: 'dialogueLog', label: '대사록' },
   { id: 'skip', label: '넘기기' },
   { id: 'auto', label: '자동진행' },
-  { id: 'quickLoad', label: 'Q.불러오기' },
   { id: 'settings', label: '설정' },
 ];
 

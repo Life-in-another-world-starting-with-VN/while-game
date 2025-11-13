@@ -63,9 +63,10 @@ export const HeroEyebrow = styled.span`
 
 export const HeroTitle = styled.h1`
   margin: 0;
-  font-size: clamp(2.2rem, 4vw, 3.15rem);
+  font-size: clamp(2.2rem, 2.8vw, 3.15rem);
   line-height: 1.1;
   color: #0c1c3f;
+  text-align: center;
 `;
 
 export const HeroDescription = styled.p`

@@ -759,9 +759,9 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
         <PinkBlurOverlay />
         <EmotionStatusWidget />
         
-        {/* 게임 타이머 - 5분 제한 */}
+        {/* 게임 타이머 - 7분 제한 */}
         {gameStartTime && (
-          <GameTimer durationMinutes={5} onTimeUp={handleTimeUp} />
+          <GameTimer durationMinutes={7} onTimeUp={handleTimeUp} />
         )}
 
         {!showChoices && !gameState.isLoading && <ClickableOverlay onClick={handleNextScene} />}

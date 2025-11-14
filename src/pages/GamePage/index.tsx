@@ -11,6 +11,8 @@ import ChoiceButtons from './components/ChoiceButtons';
 import AutoPlayModal from './components/AutoPlayModal';
 import CharacterSprite from './components/CharacterSprite';
 import DialogueLogModal from './components/DialogueLogModal';
+import GameTimer from './components/GameTimer';
+import TimeUpModal from './components/TimeUpModal';
 import { mockMenuItems } from './data/mockGameData';
 import type { MenuAction } from '../../types/game';
 import EmotionStatusWidget from '../../components/EmotionStatusWidget';
@@ -112,6 +114,37 @@ const Input = styled.input`
     outline: none;
     border-color: #667eea;
   }
+`;
+
+const CheckboxField = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #edf2f7;
+  }
+`;
+
+const Checkbox = styled.input`
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #667eea;
+`;
+
+const CheckboxLabel = styled.label`
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #2d3748;
+  cursor: pointer;
+  user-select: none;
+  flex: 1;
 `;
 
 
@@ -328,6 +361,19 @@ interface DialogueLogItem {
 
 type GameSetupMode = 'create' | 'playing';
 
+// Hidden timer component - only tracks time without displaying
+const HiddenTimer: React.FC<{ durationMinutes: number; onTimeUp: () => void }> = ({ durationMinutes, onTimeUp }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onTimeUp();
+    }, durationMinutes * 60 * 1000);
+
+    return () => clearTimeout(timer);
+  }, [durationMinutes, onTimeUp]);
+
+  return null;
+};
+
 const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const [searchParams] = useSearchParams();
   const gameIdParam = searchParams.get('gameId');
@@ -356,6 +402,7 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   });
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
+  const [showTimer, setShowTimer] = useState(true); // 타이머 표시 여부
 
   // Scene navigation state
   const [currentSceneIndex, setCurrentSceneIndex] = useState(0);
@@ -367,6 +414,8 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const [isDialogueLogModalOpen, setIsDialogueLogModalOpen] = useState(false);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [autoPlaySpeed, setAutoPlaySpeed] = useState(3000);
+  const [isTimeUpModalOpen, setIsTimeUpModalOpen] = useState(false);
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
 
   // Check if game is already loaded from URL params (future enhancement)
   useEffect(() => {
@@ -413,7 +462,29 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const handleStartCreatedGame = () => {
     setShowStartConfirm(false);
     setCurrentSceneIndex(0);
+    setGameStartTime(Date.now());
     setMode('playing');
+  };
+
+  // Handle time up
+  const handleTimeUp = () => {
+    setIsTimeUpModalOpen(true);
+    setIsAutoPlay(false);
+  };
+
+  // Restart game
+  const handleRestartGame = () => {
+    setIsTimeUpModalOpen(false);
+    setMode('create');
+    setCurrentSceneIndex(0);
+    setDialogueLog([]);
+    setGameStartTime(null);
+    setError(null);
+  };
+
+  // Exit game
+  const handleExitGame = () => {
+    window.history.back();
   };
 
   // Cancel starting game
@@ -610,6 +681,20 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
               />
               <InputHint>최소 5분 ~ 최대 100분 (권장: 30~60분)</InputHint>
             </FormField>
+            <FormField>
+              <CheckboxField onClick={() => !isCreatingGame && setShowTimer(!showTimer)}>
+                <Checkbox
+                  type="checkbox"
+                  id="showTimer"
+                  checked={showTimer}
+                  onChange={e => setShowTimer(e.target.checked)}
+                  disabled={isCreatingGame}
+                />
+                <CheckboxLabel htmlFor="showTimer">
+                  7분 시연 타이머 표시 (시간 종료 시 자동 종료)
+                </CheckboxLabel>
+              </CheckboxField>
+            </FormField>
             <Button onClick={handleCreateGame} disabled={isCreatingGame}>
               {isCreatingGame ? '생성 중...' : '게임 생성하기'}
             </Button>
@@ -681,24 +766,47 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
     // selection 씬이면 직전 dialogue 씬 사용, 아니면 현재 씬 사용
     const displayScene = (showChoices && previousDialogueScene) ? previousDialogueScene : currentScene;
 
-    // Detect emotion from dialogue text or use default
-    const currentExpression: CharacterExpression = displayScene?.dialogue
-      ? detectEmotion(displayScene.dialogue, gameForm.personality)
-      : ('neutral' as CharacterExpression);
-
-    // Get character ID from role name for consistent character assignment
-    const characterId = displayScene?.role
-      ? getCharacterIdFromName(displayScene.role)
-      : '1';
-
-    // Use character_filename if provided and valid, otherwise use characterId
-    const isValidCharacterId = (id: string): id is CharacterId => {
-      return id === '1' || id === '2' || id === '3';
+    // Parse character_filename if provided (format: "3_anger.png")
+    const parseCharacterFilename = (filename: string | null | undefined): { characterId: CharacterId; expression: CharacterExpression } | null => {
+      if (!filename) return null;
+      
+      // Extract character ID and expression from filename (e.g., "3_anger.png" -> id: "3", expression: "anger")
+      const match = filename.match(/^([123])_([a-z]+)\.png$/);
+      if (!match) return null;
+      
+      const [, id, expr] = match;
+      const characterId = id as CharacterId;
+      
+      // Map expression name to CharacterExpression type
+      const expressionMap: Record<string, CharacterExpression> = {
+        'anger': 'anger',
+        'laugh': 'laugh',
+        'smile': 'smile',
+        'sad': 'sad',
+        'worry': 'worry',
+        'embarrassed': 'embarrassed',
+        'blush': 'blush',
+        'thinking': 'thinking',
+        'surprise': 'surprise',
+      };
+      
+      const expression = expressionMap[expr];
+      if (!expression) return null;
+      
+      return { characterId, expression };
     };
-    const characterImageId: CharacterId =
-      displayScene?.character_filename && isValidCharacterId(displayScene.character_filename)
-        ? displayScene.character_filename
-        : characterId;
+
+    const parsedCharacter = parseCharacterFilename(displayScene?.character_filename);
+    
+    // Use parsed values from character_filename if available, otherwise detect from dialogue
+    const currentExpression: CharacterExpression = parsedCharacter?.expression
+      || (displayScene?.dialogue ? detectEmotion(displayScene.dialogue, gameForm.personality) : 'smile');
+
+    // Get character ID from character_filename or role name
+    const characterId = parsedCharacter?.characterId
+      || (displayScene?.role ? getCharacterIdFromName(displayScene.role) : '1');
+
+    const characterImageId: CharacterId = characterId;
 
     // 배경 URL 처리: API에서 받은 URL이 있으면 baseURL과 결합
     const finalBackgroundUrl = gameState.backgroundUrl
@@ -709,6 +817,16 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
       <Container $backgroundImage={finalBackgroundUrl}>
         <PinkBlurOverlay />
         <EmotionStatusWidget />
+        
+        {/* 게임 타이머 - 7분 제한 (showTimer가 true일 때만 표시) */}
+        {gameStartTime && showTimer && (
+          <GameTimer durationMinutes={7} onTimeUp={handleTimeUp} />
+        )}
+        
+        {/* 타이머 숨김 모드 - 백그라운드에서만 시간 체크 */}
+        {gameStartTime && !showTimer && (
+          <HiddenTimer durationMinutes={7} onTimeUp={handleTimeUp} />
+        )}
 
         {!showChoices && !gameState.isLoading && <ClickableOverlay onClick={handleNextScene} />}
 
@@ -759,6 +877,12 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
           isOpen={isDialogueLogModalOpen}
           onClose={() => setIsDialogueLogModalOpen(false)}
           dialogueLog={dialogueLog}
+        />
+
+        <TimeUpModal
+          isOpen={isTimeUpModalOpen}
+          onRestart={handleRestartGame}
+          onExit={handleExitGame}
         />
 
         {(error || gameState.error) && (

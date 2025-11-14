@@ -398,7 +398,7 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const [gameForm, setGameForm] = useState<CreateGameRequest>({
     personality: '',
     genre: '',
-    playtime: 5, // 시연용 버전 - 5분 고정
+    playtime: 4, // 시연용 버전 - 4분 고정
   });
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
@@ -440,8 +440,8 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
         setError('장르를 입력해주세요.');
         return;
       }
-      if (gameForm.playtime < 5 || gameForm.playtime > 100) {
-        setError('플레이 시간은 5분에서 100분 사이로 설정해주세요.');
+      if (gameForm.playtime < 0 || gameForm.playtime > 100) {
+        setError('플레이 시간은 1분에서 100분 사이로 설정해주세요.');
         return;
       }
 
@@ -673,11 +673,11 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
               <Label>예상 플레이 시간 (분)</Label>
               <Input
                 type="number"
-                value={5}
+                value={4}
                 disabled
                 style={{ backgroundColor: '#f7fafc', cursor: 'not-allowed' }}
               />
-              <InputHint>시연용 버전이므로 플레이 타임이 5분으로 고정되어 있습니다. 양해 부탁드립니다.</InputHint>
+              <InputHint>시연용 버전이므로 플레이 타임이 4분으로 고정되어 있습니다. 양해 부탁드립니다.</InputHint>
             </FormField>
             <FormField>
               <CheckboxField onClick={() => !isCreatingGame && setShowTimer(!showTimer)}>
@@ -689,7 +689,7 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
                   disabled={isCreatingGame}
                 />
                 <CheckboxLabel htmlFor="showTimer">
-                  7분 시연 타이머 표시 (시간 종료 시 자동 종료)
+                  4분 시연 타이머 표시 (시간 종료 시 자동 종료)
                 </CheckboxLabel>
               </CheckboxField>
             </FormField>
@@ -816,14 +816,14 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
         <PinkBlurOverlay />
         <EmotionStatusWidget />
         
-        {/* 게임 타이머 - 7분 제한 (showTimer가 true일 때만 표시) */}
+        {/* 게임 타이머 - 4분 제한 (showTimer가 true일 때만 표시) */}
         {gameStartTime && showTimer && (
-          <GameTimer durationMinutes={5} onTimeUp={handleTimeUp} />
+          <GameTimer durationMinutes={4} onTimeUp={handleTimeUp} />
         )}
         
         {/* 타이머 숨김 모드 - 백그라운드에서만 시간 체크 */}
         {gameStartTime && !showTimer && (
-          <HiddenTimer durationMinutes={5} onTimeUp={handleTimeUp} />
+          <HiddenTimer durationMinutes={4} onTimeUp={handleTimeUp} />
         )}
 
         {!showChoices && !gameState.isLoading && <ClickableOverlay onClick={handleNextScene} />}

@@ -818,12 +818,12 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
         
         {/* 게임 타이머 - 7분 제한 (showTimer가 true일 때만 표시) */}
         {gameStartTime && showTimer && (
-          <GameTimer durationMinutes={7} onTimeUp={handleTimeUp} />
+          <GameTimer durationMinutes={5} onTimeUp={handleTimeUp} />
         )}
         
         {/* 타이머 숨김 모드 - 백그라운드에서만 시간 체크 */}
         {gameStartTime && !showTimer && (
-          <HiddenTimer durationMinutes={7} onTimeUp={handleTimeUp} />
+          <HiddenTimer durationMinutes={5} onTimeUp={handleTimeUp} />
         )}
 
         {!showChoices && !gameState.isLoading && <ClickableOverlay onClick={handleNextScene} />}

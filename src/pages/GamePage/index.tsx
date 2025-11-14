@@ -398,7 +398,7 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
   const [gameForm, setGameForm] = useState<CreateGameRequest>({
     personality: '',
     genre: '',
-    playtime: 30, // 기본값 30분
+    playtime: 5, // 시연용 버전 - 5분 고정
   });
   const [isCreatingGame, setIsCreatingGame] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
@@ -673,13 +673,11 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
               <Label>예상 플레이 시간 (분)</Label>
               <Input
                 type="number"
-                min="5"
-                max="100"
-                value={gameForm.playtime}
-                onChange={e => setGameForm({ ...gameForm, playtime: parseInt(e.target.value) || 5 })}
-                disabled={isCreatingGame}
+                value={5}
+                disabled
+                style={{ backgroundColor: '#f7fafc', cursor: 'not-allowed' }}
               />
-              <InputHint>최소 5분 ~ 최대 100분 (권장: 30~60분)</InputHint>
+              <InputHint>시연용 버전이므로 플레이 타임이 5분으로 고정되어 있습니다. 양해 부탁드립니다.</InputHint>
             </FormField>
             <FormField>
               <CheckboxField onClick={() => !isCreatingGame && setShowTimer(!showTimer)}>

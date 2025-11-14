@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-
+import SurveyQR from '../../../../assets/QR.png'
 interface TimeUpModalProps {
   isOpen: boolean;
   onRestart: () => void;
@@ -28,6 +28,24 @@ const ModalOverlay = styled.div<{ $isOpen: boolean }>`
       opacity: 1;
     }
   }
+`;
+const QRWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 12px 0 20px;
+`;
+
+const QRImage = styled.img`
+  width: 140px;
+  height: 140px;
+  border-radius: 12px;
+`;
+
+const QRLabel = styled.div`
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
 `;
 
 const ModalCard = styled.div`
@@ -120,6 +138,13 @@ const TimeUpModal: React.FC<TimeUpModalProps> = ({ isOpen, onRestart, onExit }) 
           <br />
           새로운 게임을 시작하시겠습니까?
         </Message>
+
+
+        <QRWrapper>
+          <QRImage src={SurveyQR} alt="설문조사 QR 코드" />
+          <QRLabel>시연이 끝났어요! 설문에 참여해주세요 🙏</QRLabel>
+        </QRWrapper>
+
         <ButtonGroup>
           <Button variant="secondary" onClick={onExit}>
             나가기

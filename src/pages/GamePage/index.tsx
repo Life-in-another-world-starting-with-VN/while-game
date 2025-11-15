@@ -673,11 +673,11 @@ const GamePage: React.FC<GamePageProps> = ({ backgroundImage }) => {
               <Label>예상 플레이 시간 (분)</Label>
               <Input
                 type="number"
-                value={4}
+                value={7}
                 disabled
                 style={{ backgroundColor: '#f7fafc', cursor: 'not-allowed' }}
               />
-              <InputHint>시연용 버전이므로 플레이 타임이 4분으로 고정되어 있습니다. 양해 부탁드립니다.</InputHint>
+              <InputHint>시연용 버전이므로 플레이 타임이 7분으로 고정되어 있습니다. 양해 부탁드립니다.</InputHint>
             </FormField>
             <FormField>
               <CheckboxField onClick={() => !isCreatingGame && setShowTimer(!showTimer)}>
